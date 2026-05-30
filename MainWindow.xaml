@@ -3,10 +3,122 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NodeTracker"
+        xmlns:models="clr-namespace:NodeTracker.Models"
+        xmlns:conv="clr-namespace:NodeTracker.Converters"
+        Title="Личный дневник заметок" Height="640" Width="1100"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Background="{DynamicResource WindowBackground}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+    </Window.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="36"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
+        <Border Grid.Column="0" Grid.Row="0" CornerRadius="20" Background="#FF1E2128" Padding="16" SnapsToDevicePixels="True">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,12">
+                    <TextBlock Text="Заметки" Foreground="White" FontSize="20" FontWeight="Bold" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,0,0,0" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Привет, " Foreground="#FFBFC6D2" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        <TextBlock Text="{Binding CurrentUser.Username}" Foreground="#FFF2F2F2" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Content="Выход" Command="{Binding LogoutCommand}" Width="80" Margin="12,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10" Visibility="{Binding IsAuthenticated, Converter={StaticResource InverseBoolToVis}}">
+                    <TextBlock Text="Аккаунт" Foreground="#FFBFC6D2" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding LoginUsername, UpdateSourceTrigger=PropertyChanged}"
+                             Foreground="White" Background="#FF2A2E37" BorderBrush="#FF3C4250" Padding="8" Margin="0,6,0,6"/>
+                    <PasswordBox x:Name="PwdBox" PasswordChanged="PwdBox_PasswordChanged" Background="#FF2A2E37" Foreground="White" BorderBrush="#FF3C4250" Padding="8"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,0">
+                        <Button Content="Войти" Command="{Binding LoginCommand}" Width="100"/>
+                        <Button Content="Зарегистрироваться" Command="{Binding RegisterCommand}" Width="140" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                         Foreground="White" Background="#FF2A2E37" BorderBrush="#FF3C4250" 
+                         Padding="10" Margin="0,0,0,10" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}" />
+                <CheckBox Content="Показать только избранные"
+                          IsChecked="{Binding ShowFavoritesOnly}"
+                          Foreground="White"
+                          Margin="0,0,0,16" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                <ListBox ItemsSource="{Binding NotesView}"
+                         SelectedItem="{Binding SelectedNote, Mode=TwoWay}"
+                         Background="#FF141619"
+                         BorderBrush="#FF3C4250"
+                         Foreground="White"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="models:Note">
+                            <Border CornerRadius="12" Padding="12" Margin="0,0,0,10" Background="#FF1B1D22">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="{Binding CreatedDate, StringFormat='dd.MM.yyyy HH:mm'}" Foreground="#FF8B95A1" FontSize="12"/>
+                                        <TextBlock Text="  " />
+                                        <TextBlock Text="{Binding Tags}" Foreground="#FF8B95A1" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Grid.Row="0" CornerRadius="20" Background="#FF1E2128" Padding="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Редактор заметки" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                <StackPanel Grid.Row="1" Margin="0,0,0,16" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Заголовок" Foreground="#FFF2F2F2" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding EditorNote.Title, UpdateSourceTrigger=PropertyChanged}"
+                             Foreground="White" Background="#FF2A2E37" BorderBrush="#FF3C4250" Padding="10" Margin="0,6,0,10"/>
+                    <TextBlock Text="Теги (через запятую)" Foreground="#FFF2F2F2" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding EditorNote.Tags, UpdateSourceTrigger=PropertyChanged}"
+                             Foreground="White" Background="#FF2A2E37" BorderBrush="#FF3C4250" Padding="10" Margin="0,6,0,10"/>
+                    <CheckBox Content="Избранная заметка"
+                              IsChecked="{Binding EditorNote.IsFavorite}"
+                              Foreground="White"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Содержание" Foreground="#FFF2F2F2" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding EditorNote.Content, UpdateSourceTrigger=PropertyChanged}"
+                             Foreground="White" Background="#FF2A2E37" BorderBrush="#FF3C4250" Padding="10"
+                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Height="320" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0" Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
+                    <Button Content="Новая" Command="{Binding NewCommand}" Width="120"/>
+                    <Button Content="Сохранить" Command="{Binding SaveCommand}" Width="120"/>
+                    <Button Content="Удалить" Command="{Binding DeleteCommand}" Width="120" Background="#FFCF6679"/>
+                </StackPanel>
+
+                <Grid Grid.RowSpan="4" Visibility="{Binding IsAuthenticated, Converter={StaticResource InverseBoolToVis}}">
+                    <TextBlock Text="Пожалуйста, войдите в аккаунт или зарегистрируйтесь, чтобы управлять заметками."
+                               Foreground="#FFD1D6E3" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Grid.ColumnSpan="3" Background="#FF1E2128" CornerRadius="12" Padding="0" Margin="0,16,0,0">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#FFF2F2F2" VerticalAlignment="Center"/>
+        </Border>
     </Grid>
 </Window>
